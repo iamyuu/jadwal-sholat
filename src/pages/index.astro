@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import cities from '../data/city.json';
 import { getPrayerTime } from '../services/prayer-time';
+import CountdownTimer from '../components/countdown-timer.svelte';
 
 // fallback to `Jakarta` if no city found
 const fallbackCityId = '1301';
@@ -63,7 +64,10 @@ const nextPrayerTime = prayerTime[nextPrayerName];
 					<use href={`/sprite.svg#${nextPrayerName}`}></use>
 				</svg>
 			</div>
-			<time datetime={nextPrayerTime} class='font-semibold text-heading text-5xl'>{nextPrayerTime}</time>
+			<div class='flex flex-col'>
+				<time datetime={nextPrayerTime} class='font-semibold text-heading text-5xl'>{nextPrayerTime}</time>
+				<CountdownTimer client:only prayerTime={nextPrayerTime} />
+			</div>
 		</section>
 	</body>
 </html>
