@@ -1,15 +1,69 @@
 ---
+import '../styles/global.css';
+import cities from '../data/city.json';
+import { getPrayerTime } from '../services/prayer-time';
+
+// fallback to `Jakarta` if no city found
+const fallbackCityId = '1301';
+// fallback to `subuh` if no next prayer time found
+const fallbackPrayer = 'subuh';
+
+// Get prayer time based on user's city (based on Cloudflare geolocation)
+// @ts-expect-error -- `cf` only available on Cloudflare, not on local dev
+const cf = Astro.request?.cf;
+const userCity = cf?.city ? cities.find(city => new RegExp(cf?.city, 'i').test(city.lokasi)) : { id: fallbackCityId };
+const prayerTime = await getPrayerTime(userCity?.id || fallbackCityId);
+
+// Get current hour based on user's timezone
+const currentTime = new Intl.DateTimeFormat('id-ID', {
+	hour: 'numeric',
+	minute: 'numeric',
+	timeZone: cf?.timezone,
+}).format(new Date());
+
+// Find next prayer time
+function findNextPrayer(key: string) {
+	try {
+		const [currentHour, currentMinute] = currentTime.split(':');
+		const [hour, minute] = prayerTime[key].split(':');
+
+		if (parseInt(hour) > parseInt(currentHour)) {
+			return true;
+		}
+
+		if (parseInt(hour) === parseInt(currentHour)) {
+			return parseInt(minute) >= parseInt(currentMinute);
+		}
+
+		return false;
+	} catch {
+		return false;
+	}
+}
+
+// Get next prayer time
+// FIXME: should fetch next day prayer time if no next prayer time found
+const nextPrayerName = Object.keys(prayerTime).find(findNextPrayer) ?? fallbackPrayer;
+const nextPrayerTime = prayerTime[nextPrayerName];
 ---
 
-<html lang="en">
+<html lang='id'>
 	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<meta charset='utf-8' />
+		<meta name='viewport' content='width=device-width' />
+		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
+		<link rel='preload' as='image/svg+xml' href='/sprite.svg' />
+		<title>Jadwal Sholat</title>
 	</head>
-	<body>
-		<h1>Astro</h1>
+	<body class='bg-background text-paragpraph font-sans p-4 flex items-center justify-center h-screen'>
+		<section class='bg-card flex flex-col justify-between p-4 rounded-2xl shadow-sm w-72 h-72'>
+			<div class='flex justify-between items-center text-2xl'>
+				<span class='text-highlight text-2xl capitalize'>{nextPrayerName}</span>
+				<svg width='24' height='24' class='opacity-75'>
+					<use href={`/sprite.svg#${nextPrayerName}`}></use>
+				</svg>
+			</div>
+			<time datetime={nextPrayerTime} class='font-semibold text-heading text-5xl'>{nextPrayerTime}</time>
+		</section>
 	</body>
 </html>
