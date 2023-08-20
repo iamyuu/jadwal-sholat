@@ -6,13 +6,14 @@ import CountdownTimer from '../components/countdown-timer.svelte';
 
 // fallback to `Jakarta` if no city found
 const fallbackCityId = '1301';
+const fallbackCityName = 'Jakarta';
 // fallback to `subuh` if no next prayer time found
 const fallbackPrayer = 'subuh';
 
 // Get prayer time based on user's city (based on Cloudflare geolocation)
 // @ts-expect-error -- `cf` only available on Cloudflare, not on local dev
-const cf = Astro.locals.runtime.cf;
-const userCity = cf?.city ? cities.find(city => new RegExp(cf?.city, 'i').test(city.lokasi)) : { id: fallbackCityId };
+const cf = Astro.locals.runtime?.cf;
+const userCity = cf?.city ? cities.find(city => new RegExp(cf?.city, 'i').test(city.lokasi)) : { id: fallbackCityId, lokasi: fallbackCityName };
 const prayerTime = await getPrayerTime(userCity?.id || fallbackCityId);
 
 // Get current hour based on user's timezone
@@ -46,6 +47,9 @@ function findNextPrayer(key: string) {
 // FIXME: should fetch next day prayer time if no next prayer time found
 const nextPrayerName = Object.keys(prayerTime).find(findNextPrayer) ?? fallbackPrayer;
 const nextPrayerTime = prayerTime[nextPrayerName];
+
+// TODO: set manually city
+// Cloudflare geolocation is not 100% accurate
 ---
 
 <html lang='id'>
@@ -64,7 +68,13 @@ const nextPrayerTime = prayerTime[nextPrayerName];
 					<use href={`/sprite.svg#${nextPrayerName}`}></use>
 				</svg>
 			</div>
-			<div class='flex flex-col'>
+			<div class='flex flex-col font-light'>
+				<div class='flex items-center space-x-1'>
+					<svg width='16' height='16'>
+						<use href='/sprite.svg#current-location'></use>
+					</svg>
+					<small class='capitalize'>{userCity?.lokasi}</small>
+				</div>
 				<time datetime={nextPrayerTime} class='font-semibold text-heading text-5xl'>{nextPrayerTime}</time>
 				<CountdownTimer client:load prayerTime={nextPrayerTime} />
 			</div>
