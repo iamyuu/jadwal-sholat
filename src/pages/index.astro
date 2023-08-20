@@ -11,7 +11,7 @@ const fallbackPrayer = 'subuh';
 
 // Get prayer time based on user's city (based on Cloudflare geolocation)
 // @ts-expect-error -- `cf` only available on Cloudflare, not on local dev
-const cf = Astro.request?.cf;
+const cf = Astro.locals.runtime.cf;
 const userCity = cf?.city ? cities.find(city => new RegExp(cf?.city, 'i').test(city.lokasi)) : { id: fallbackCityId };
 const prayerTime = await getPrayerTime(userCity?.id || fallbackCityId);
 
@@ -25,7 +25,7 @@ const currentTime = new Intl.DateTimeFormat('id-ID', {
 // Find next prayer time
 function findNextPrayer(key: string) {
 	try {
-		const [currentHour, currentMinute] = currentTime.split(':');
+		const [currentHour, currentMinute] = currentTime.split('.');
 		const [hour, minute] = prayerTime[key].split(':');
 
 		if (parseInt(hour) > parseInt(currentHour)) {
