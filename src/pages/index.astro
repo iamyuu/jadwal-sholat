@@ -33,7 +33,7 @@ const displayCity = userCity?.lokasi.toLowerCase().replace('kota', '');
 		<link rel='preload' as='image/svg+xml' href='/sprite.svg' />
 
 		<title>{seo.title}</title>
-		<link rel='canonical' href={Astro.url.href} />
+		<link rel='canonical' href={seo.url} />
 		<meta name='description' content={seo.description} />
 		<meta name='keywords' content={seo.keywords} />
 		<meta name='author' content={seo.author} />
@@ -44,7 +44,7 @@ const displayCity = userCity?.lokasi.toLowerCase().replace('kota', '');
 		<meta property='og:locale' content={seo.locale} />
 		<meta property='og:image' content={seo.image} />
 		<meta property='og:image:alt' content={seo.imageAlt} />
-		<meta property='og:url' content={Astro.url.href} />
+		<meta property='og:url' content={seo.url} />
 
 		<meta name='twitter:card' content='app' />
 		<meta name='twitter:creator' content={seo.creator} />
@@ -53,23 +53,23 @@ const displayCity = userCity?.lokasi.toLowerCase().replace('kota', '');
 		<meta name='twitter:image:alt' content={seo.imageAlt} />
 		<meta name='twitter:description' content={seo.description} />
 	</head>
-	<body class='bg-background text-paragpraph font-sans pt-48 px-4'>
-		<section class='bg-card flex flex-col justify-between mx-auto p-4 rounded-2xl shadow-sm w-72 h-72'>
+	<body class='bg-background text-paragpraph font-sans py-48 px-4'>
+		<section aria-label='card prayer time' class='bg-card flex flex-col justify-between mx-auto p-4 rounded-2xl shadow-sm w-72 h-72'>
 			<div class='flex justify-between items-center text-2xl'>
-				<span class='text-highlight text-2xl capitalize'>{prayerTime.name}</span>
-				<svg width='24' height='24' class='opacity-75'>
+				<span aria-label='sholat berikutnya' class='text-highlight text-2xl capitalize'>{prayerTime.name}</span>
+				<svg width='32' height='32' class='opacity-75'>
 					<use href={`/sprite.svg#${prayerTime.name}`}></use>
 				</svg>
 			</div>
 			<div class='flex flex-col font-light'>
 				<div class='flex items-center space-x-1'>
 					<svg width='16' height='16'>
-						<use href='/sprite.svg#current-location'></use>
+						<use href='/sprite.svg#tabler-map-pin'></use>
 					</svg>
-					<small class='capitalize'>{displayCity}</small>
+					<small aria-label='lokasi saya' class='capitalize'>{displayCity}</small>
 				</div>
-				<time datetime={prayerTime.time} class='font-semibold text-heading text-5xl'>{prayerTime.time}</time>
-				<CountdownTimer client:load prayerTime={prayerTime.time} />
+				<time aria-label='waktu sholat berikutnya' datetime={prayerTime.time} class='font-semibold text-heading text-5xl'>{prayerTime.time}</time>
+				<CountdownTimer client:load prayerTime={prayerTime.time} isNextDay={prayerTime.isNextDay} />
 			</div>
 		</section>
 	</body>

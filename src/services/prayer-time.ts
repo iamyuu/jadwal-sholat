@@ -16,7 +16,7 @@ export async function getNextPrayerTime(cityId: string, cf?: unknown) {
 	}).format(new Date());
 
 	// Find next prayer time
-	function findNextPrayer(key: string) {
+	function finderNextPrayer(key: string) {
 		try {
 			const [currentHour, currentMinute] = currentTime.split(".");
 			const [hour, minute] = prayerTime[key].split(":");
@@ -37,12 +37,13 @@ export async function getNextPrayerTime(cityId: string, cf?: unknown) {
 
 	// Get next prayer time
 	// TODO: should fetch next day prayer time if no next prayer time found
-	const nextPrayerName =
-		Object.keys(prayerTime).find(findNextPrayer) ?? fallbackPrayer;
+	const findNextPrayer = Object.keys(prayerTime).find(finderNextPrayer);
+	const nextPrayerName = findNextPrayer ?? fallbackPrayer;
 
 	return {
 		name: nextPrayerName,
 		time: prayerTime[nextPrayerName],
+		isNextDay: !findNextPrayer,
 	};
 }
 

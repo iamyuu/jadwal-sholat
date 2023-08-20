@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	/**
-	 * @type {string} prayer time in hours:minutes
-	 */
+	// prayer time in hours:minutes
 	export let prayerTime: string;
+	export let isNextDay: boolean;
 
 	// Transform prayer time to Date object
 	const now = new Date();
 	const [prayerHour, prayerMinute] = prayerTime.split(':');
 	const prayerDate = new Date();
 	prayerDate.setHours(Number(prayerHour), Number(prayerMinute), 0, 0);
+	if (isNextDay) prayerDate.setDate(now.getDate() + 1);
 
 	// Calculate remaining time
 	let seconds = Math.floor((prayerDate - now) / 1000);
@@ -47,13 +47,13 @@
 	});
 
 	// Add leading zero to single digit numbers
-	// or return '--' if time is NaN
+	// or return '--' if time is NaN or less than 1
 	function formatTime(time: number) {
-		if (isNaN(time)) return '--';
+		if (isNaN(time) || time < 1) return '--';
 		return time < 10 ? `0${time}` : time;
 	}
 </script>
 
 <small>
-	{formatTime(hours)}j : {formatTime(minutes)}m : {formatTime(seconds)}d
+	{formatTime(hours)}:{formatTime(minutes)}:{formatTime(seconds)}
 </small>
