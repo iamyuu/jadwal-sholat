@@ -1,4 +1,50 @@
 const SERVICE_URL = "https://api.myquran.com/v1/sholat/jadwal";
+const fallbackTimezone = "Asia/Jakarta";
+const fallbackPrayer = "subuh";
+
+/**
+ * Get next prayer time for specific city
+ */
+export async function getNextPrayerTime(cityId: string, cf?: unknown) {
+	const prayerTime = await getPrayerTime(cityId);
+
+	// Get current hour based on user's timezone
+	const currentTime = new Intl.DateTimeFormat("id-ID", {
+		hour: "numeric",
+		minute: "numeric",
+		timeZone: cf?.timezone || fallbackTimezone,
+	}).format(new Date());
+
+	// Find next prayer time
+	function findNextPrayer(key: string) {
+		try {
+			const [currentHour, currentMinute] = currentTime.split(".");
+			const [hour, minute] = prayerTime[key].split(":");
+
+			if (parseInt(hour) > parseInt(currentHour)) {
+				return true;
+			}
+
+			if (parseInt(hour) === parseInt(currentHour)) {
+				return parseInt(minute) >= parseInt(currentMinute);
+			}
+
+			return false;
+		} catch {
+			return false;
+		}
+	}
+
+	// Get next prayer time
+	// TODO: should fetch next day prayer time if no next prayer time found
+	const nextPrayerName =
+		Object.keys(prayerTime).find(findNextPrayer) ?? fallbackPrayer;
+
+	return {
+		name: nextPrayerName,
+		time: prayerTime[nextPrayerName],
+	};
+}
 
 /**
  * Get prayer time for specific city
@@ -52,9 +98,3 @@ interface PrayerTimeResponse {
 		};
 	};
 }
-
-// shubuh
-// zhuhur
-// ashar
-// magrib
-// isya
