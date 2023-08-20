@@ -54,6 +54,6 @@
 	}
 </script>
 
-<small class='opacity-75'>
+<small>
 	{formatTime(hours)}j : {formatTime(minutes)}m : {formatTime(seconds)}d
 </small>
