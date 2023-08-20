@@ -50,6 +50,9 @@ const nextPrayerTime = prayerTime[nextPrayerName];
 
 // TODO: set manually city
 // Cloudflare geolocation is not 100% accurate
+
+// transform city name to lowercase and remove `kota` word
+const displayCity = userCity?.lokasi.toLowerCase().replace('KOTA', '');
 ---
 
 <html lang='id'>
@@ -73,7 +76,7 @@ const nextPrayerTime = prayerTime[nextPrayerName];
 					<svg width='16' height='16'>
 						<use href='/sprite.svg#current-location'></use>
 					</svg>
-					<small class='capitalize'>{userCity?.lokasi}</small>
+					<small class='capitalize'>{displayCity}</small>
 				</div>
 				<time datetime={nextPrayerTime} class='font-semibold text-heading text-5xl'>{nextPrayerTime}</time>
 				<CountdownTimer client:load prayerTime={nextPrayerTime} />
