@@ -1,5 +1,4 @@
 ---
-import '../styles/global.css';
 import { getCityByUser } from '../services/city';
 import { getNextPrayerTime } from '../services/prayer-time';
 import Html from '../components/html.astro';
@@ -16,6 +15,8 @@ const prayerTime = await getNextPrayerTime(userCity.id, cf);
 
 // transform city name to lowercase and remove `kota` word
 const displayCity = userCity?.lokasi.toLowerCase().replace('kota', '');
+
+export const prerender = false;
 ---
 
 <Html>
