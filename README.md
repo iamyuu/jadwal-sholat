@@ -23,3 +23,7 @@ lokasi Anda secara manual, tetapi Anda tetap dapat memilih lokasi Anda secara ma
 - [Ide layout](https://dribbble.com/shots/21019580-Ramadhan-App-Widget)
 - [Ikon waktu sholat](https://www.figma.com/community/file/1090549544368158969)
 - [Ikon lainnya](https://tabler-icons.io)
+
+## 📝 Lisensi
+
+Kode sumber web ini dilisensikan di bawah [GPL-3.0 License](LICENSE).
