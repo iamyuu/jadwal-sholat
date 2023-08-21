@@ -1,14 +1,9 @@
 ---
 import '../styles/global.css';
-import { seo } from '../constants';
 import { getCityByUser } from '../services/city';
 import { getNextPrayerTime } from '../services/prayer-time';
+import Html from '../components/html.astro';
 import CountdownTimer from '../components/countdown-timer.svelte';
-
-Object.assign(seo, {
-	url: Astro.url.toString(),
-	image: `${Astro.url.toString()}${seo.image}`,
-});
 
 // Get prayer time based on user's city (based on Cloudflare geolocation)
 // @ts-expect-error -- `cf` only available on Cloudflare, not on local dev
@@ -23,54 +18,23 @@ const prayerTime = await getNextPrayerTime(userCity.id, cf);
 const displayCity = userCity?.lokasi.toLowerCase().replace('kota', '');
 ---
 
-<html lang={seo.locale}>
-	<head>
-		<meta charset='utf-8' />
-		<meta name='viewport' content='width=device-width' />
-		<meta name='robots' content='index, follow, notranslate' />
-
-		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
-		<link rel='preload' as='image/svg+xml' href='/sprite.svg' />
-
-		<title>{seo.title}</title>
-		<link rel='canonical' href={seo.url} />
-		<meta name='description' content={seo.description} />
-		<meta name='keywords' content={seo.keywords} />
-		<meta name='author' content={seo.author} />
-
-		<meta property='og:type' content='website' />
-		<meta property='og:title' content={seo.title} />
-		<meta property='og:description' content={seo.description} />
-		<meta property='og:locale' content={seo.locale} />
-		<meta property='og:image' content={seo.image} />
-		<meta property='og:image:alt' content={seo.imageAlt} />
-		<meta property='og:url' content={seo.url} />
-
-		<meta name='twitter:card' content='app' />
-		<meta name='twitter:creator' content={seo.creator} />
-		<meta name='twitter:title' content={seo.title} />
-		<meta name='twitter:image' content={seo.image} />
-		<meta name='twitter:image:alt' content={seo.imageAlt} />
-		<meta name='twitter:description' content={seo.description} />
-	</head>
-	<body class='bg-background text-paragpraph font-sans py-48 px-4'>
-		<section aria-label='card prayer time' class='bg-card flex flex-col justify-between mx-auto p-4 rounded-2xl shadow-sm w-72 h-72'>
-			<div class='flex justify-between items-center text-2xl'>
-				<span aria-label='sholat berikutnya' class='text-highlight text-2xl capitalize'>{prayerTime.name}</span>
-				<svg width='32' height='32' class='opacity-75'>
-					<use href={`/sprite.svg#${prayerTime.name}`}></use>
+<Html>
+	<section aria-label='card prayer time' class='bg-card flex flex-col justify-between mx-auto p-4 rounded-2xl shadow-sm w-72 h-72'>
+		<div class='flex justify-between items-center text-2xl'>
+			<span aria-label='sholat berikutnya' class='text-highlight text-2xl capitalize'>{prayerTime.name}</span>
+			<svg width='32' height='32' class='opacity-75'>
+				<use href={`/sprite.svg#${prayerTime.name}`}></use>
+			</svg>
+		</div>
+		<div class='flex flex-col font-light'>
+			<div class='flex items-center space-x-1'>
+				<svg width='16' height='16'>
+					<use href='/sprite.svg#tabler-map-pin'></use>
 				</svg>
+				<small aria-label='lokasi saya' class='capitalize'>{displayCity}</small>
 			</div>
-			<div class='flex flex-col font-light'>
-				<div class='flex items-center space-x-1'>
-					<svg width='16' height='16'>
-						<use href='/sprite.svg#tabler-map-pin'></use>
-					</svg>
-					<small aria-label='lokasi saya' class='capitalize'>{displayCity}</small>
-				</div>
-				<time aria-label='waktu sholat berikutnya' datetime={prayerTime.time} class='font-semibold text-heading text-5xl'>{prayerTime.time}</time>
-				<CountdownTimer client:load prayerTime={prayerTime.time} isNextDay={prayerTime.isNextDay} />
-			</div>
-		</section>
-	</body>
-</html>
+			<time aria-label='waktu sholat berikutnya' datetime={prayerTime.time} class='font-semibold text-heading text-5xl'>{prayerTime.time}</time>
+			<CountdownTimer client:load prayerTime={prayerTime.time} isNextDay={prayerTime.isNextDay} />
+		</div>
+	</section>
+</Html>
