@@ -49,7 +49,7 @@
 	// Add leading zero to single digit numbers
 	// or return '--' if time is NaN or less than 1
 	function formatTime(time: number) {
-		if (isNaN(time) || time < 1) return '--';
+		if (isNaN(time) || time < 0) return '--';
 		return time < 10 ? `0${time}` : time;
 	}
 </script>
