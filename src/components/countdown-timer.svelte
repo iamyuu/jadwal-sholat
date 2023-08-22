@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount } from "svelte";
 
 	// prayer time in hours:minutes
 	export let prayerTime: string;
@@ -7,13 +7,14 @@
 
 	// Transform prayer time to Date object
 	const now = new Date();
-	const [prayerHour, prayerMinute] = prayerTime.split(':');
+	const [prayerHour, prayerMinute] = prayerTime.split(":");
 	const prayerDate = new Date();
 	prayerDate.setHours(Number(prayerHour), Number(prayerMinute), 0, 0);
 	if (isNextDay) prayerDate.setDate(now.getDate() + 1);
 
 	// Calculate remaining time
-	let seconds = Math.floor((prayerDate - now) / 1000);
+	// https://github.com/Microsoft/TypeScript/issues/5710#issuecomment-157886246
+	let seconds = Math.floor((+prayerDate - +now) / 1000);
 	let minutes = Math.floor(seconds / 60);
 	let hours = Math.floor(minutes / 60);
 
@@ -49,7 +50,7 @@
 	// Add leading zero to single digit numbers
 	// or return '--' if time is NaN or less than 1
 	function formatTime(time: number) {
-		if (isNaN(time) || time < 0) return '--';
+		if (isNaN(time) || time < 0) return "--";
 		return time < 10 ? `0${time}` : time;
 	}
 </script>
