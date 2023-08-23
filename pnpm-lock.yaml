@@ -34,6 +34,9 @@ dependencies:
     version: 3.3.3
 
 devDependencies:
+  '@cloudflare/workers-types':
+    specifier: 4.20230821.0
+    version: 4.20230821.0
   wrangler:
     specifier: 3.5.1
     version: 3.5.1
@@ -59,7 +62,7 @@ packages:
       astro: ^2.10.6
     dependencies:
       '@astrojs/underscore-redirects': 0.2.0
-      '@cloudflare/workers-types': 4.20230814.0
+      '@cloudflare/workers-types': 4.20230821.0
       astro: 2.10.12
       esbuild: 0.17.19
       tiny-glob: 0.2.9
@@ -465,9 +468,8 @@ packages:
     dev: true
     optional: true
 
-  /@cloudflare/workers-types@4.20230814.0:
-    resolution: {integrity: sha512-+jHiGjZg2UpULZSSHmHLqUG45TLg1s+uppSMlGvMn0u/xyFsRX9HX6b8Ydg/oHSp3jfSuPtX05GSvtgRAmrWTg==}
-    dev: false
+  /@cloudflare/workers-types@4.20230821.0:
+    resolution: {integrity: sha512-lVQSyr5E4CEkQw7WIdsrMTj+kHjsm28mJ0B5AhNFByKR+16KTFsU/RW/nGLKHHW2jxT5lvYI+HjNQMzC9QR8Ng==}
 
   /@emmetio/abbreviation@2.3.3:
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}

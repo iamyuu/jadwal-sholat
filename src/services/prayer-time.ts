@@ -1,3 +1,4 @@
+import type { CfProperties } from "@cloudflare/workers-types";
 import { LRUCache } from "lru-cache";
 import { cachified, lruCacheAdapter, type CacheEntry } from "cachified";
 
@@ -13,14 +14,15 @@ const cacheTtlMs = 1_000 * 60 * 60 * 24 * 31; // 1 month
 /**
  * Get next prayer time for specific city
  */
-export async function getNextPrayerTime(cityId: string, cf?: unknown) {
+export async function getNextPrayerTime(cityId: string, cf?: CfProperties) {
 	const prayerTime = await getPrayerTime(cityId);
 
 	// Get current hour based on user's timezone
 	const currentTime = new Intl.DateTimeFormat("id-ID", {
 		hour: "numeric",
 		minute: "numeric",
-		timeZone: cf?.timezone || fallbackTimezone,
+		timeZone:
+			typeof cf?.timezone === "string" ? cf?.timezone : fallbackTimezone,
 	}).format(new Date());
 
 	// Find next prayer time

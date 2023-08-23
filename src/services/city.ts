@@ -1,3 +1,4 @@
+import type { CfProperties } from "@cloudflare/workers-types";
 import cities from "../data/city.json";
 
 // const SERVICE_URL = "https://api.myquran.com/v1/sholat/kota";
@@ -20,16 +21,19 @@ function getCities() {
 /**
  * Get city by user location
  */
-export function getCityByUser(cf?: unknown) {
+export function getCityByUser(cf?: CfProperties) {
+	// TS can't detect type of cf?.city after we check that, so we need to assign it to variable first
+	const cfCity = cf?.city;
+
 	// If user not from Indonesia, use Jakarta as default
 	// If user from Indonesia, but can't detect city, use Jakarta as default
-	if (!cf || !cf?.city || cf?.country !== "ID") {
+	if (!cf || typeof cfCity !== "string" || cf?.country !== "ID") {
 		return fallbackCity;
 	}
 
 	const userCity = getCities().find((city) =>
 		// Use regex to match city name, case insensitive
-		new RegExp(cf?.city, "i").test(city.lokasi)
+		new RegExp(cfCity, "i").test(city.lokasi)
 	);
 
 	// If user from Indonesia, but can't find city, use Jakarta as default
