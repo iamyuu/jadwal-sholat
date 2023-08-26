@@ -1,7 +1,7 @@
 :root {
-	--color-background: #f2f7f5;
-	--color-card: #fffffe;
-	--color-heading: #00473e;
-	--color-paragpraph: #475d5b;
-	--color-highlight: #d8779a;
+	--color-background: hsl(156, 24%, 96%);
+	--color-card: hsl(60, 100%, 100%);
+	--color-heading: hsl(172, 100%, 14%);
+	--color-paragpraph: hsl(175, 13%, 32%);
+	--color-highlight: hsl(338, 56%, 50%);
 }
