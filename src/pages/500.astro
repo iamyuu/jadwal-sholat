@@ -1,12 +1,10 @@
 ---
 import Html from '../components/html.astro';
+import Error from '../components/error.astro';
 
 export const prerender = true;
 ---
 
 <Html>
-	<section class='space-y-2 text-center'>
-		<h1 class='font-semibold text-heading text-3xl'>Kesalahan server</h1>
-		<p class='text-xl'>Terjadi kesalahan saat memuat halaman ini. Silahkan coba beberapa saat lagi.</p>
-	</section>
+	<Error title='Kesalahan server' description='Terjadi kesalahan saat memuat halaman ini. Silahkan coba beberapa saat lagi.' />
 </Html>
