@@ -16,7 +16,7 @@ Object.assign(seo, {
 		<meta name='robots' content='index, follow, notranslate' />
 		<link rel='sitemap' href='/sitemap-index.xml' />
 
-		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
+		<link rel='shortcut icon' type='image/svg+xml' href='/favicon.svg' />
 		<link rel='preload' as='image/svg+xml' href='/sprite.svg' />
 
 		<title>{seo.title}</title>
@@ -40,7 +40,9 @@ Object.assign(seo, {
 		<meta name='twitter:image:alt' content={seo.imageAlt} />
 		<meta name='twitter:description' content={seo.description} />
 	</head>
-	<body class='bg-background text-paragpraph font-sans py-48 px-4'>
-		<slot />
+	<body class='bg-background text-paragpraph font-sans'>
+		<main class='py-48 px-4'>
+			<slot />
+		</main>
 	</body>
 </html>
