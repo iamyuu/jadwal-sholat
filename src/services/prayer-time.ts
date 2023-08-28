@@ -1,4 +1,5 @@
 import type { CfProperties } from "@cloudflare/workers-types";
+import { z } from "zod";
 import { LRUCache } from "lru-cache";
 import { cachified, lruCacheAdapter, type CacheEntry } from "cachified";
 
@@ -11,11 +12,32 @@ const lru = new LRUCache<string, CacheEntry>({ max: 50 });
 const cache = lruCacheAdapter(lru);
 const cacheTtlMs = 1_000 * 60 * 60 * 24 * 31; // 1 month
 
+const prayerTimeResponseSchema = z
+	.object({
+		data: z.object({
+			jadwal: z.array(
+				z.object({
+					subuh: z.string(),
+					dzuhur: z.string(),
+					ashar: z.string(),
+					maghrib: z.string(),
+					isya: z.string(),
+					date: z.coerce.date(),
+				})
+			),
+		}),
+	})
+	.transform((data) => data.data.jadwal);
+
 /**
  * Get next prayer time for specific city
  */
 export async function getNextPrayerTime(cityId: string, cf?: CfProperties) {
-	const prayerTime = await getPrayerTime(cityId);
+	// TODO: improve type
+	const prayerTime = (await getPrayerTime(cityId)) as unknown as Record<
+		string,
+		string
+	>;
 
 	// Get current hour based on user's timezone
 	const currentTime = new Intl.DateTimeFormat("id-ID", {
@@ -74,7 +96,7 @@ export async function getPrayerTimeInMoth(cityId: string) {
 	const now = new Date();
 	const currentYearAndMonth = `${now.getFullYear()}/${now.getMonth() + 1}`;
 
-	return cachified<Array<PrayerTime>>({
+	return cachified<PrayerTime>({
 		key: `ID_${cityId}-${currentYearAndMonth}`,
 		cache,
 		ttl: cacheTtlMs,
@@ -83,42 +105,9 @@ export async function getPrayerTimeInMoth(cityId: string) {
 				`${SERVICE_URL}/${cityId}/${currentYearAndMonth}`
 			).then((r) => r.json());
 
-			return transformResponse(response);
+			return prayerTimeResponseSchema.parse(response);
 		},
 	});
 }
 
-/**
- * Transform response from API to get specific data
- */
-function transformResponse(response: PrayerTimeResponse): Array<PrayerTime> {
-	const schedules = response.data.jadwal;
-
-	return schedules.map((schedule) => ({
-		subuh: schedule.subuh,
-		dzuhur: schedule.dzuhur,
-		ashar: schedule.ashar,
-		maghrib: schedule.maghrib,
-		isya: schedule.isya,
-	}));
-}
-
-type PrayerTime = Record<string, string>;
-
-interface PrayerTimeResponse {
-	data: {
-		jadwal: Array<{
-			imsak: string;
-			subuh: string;
-			terbit: string;
-			dhuha: string;
-			dzuhur: string;
-			ashar: string;
-			maghrib: string;
-			isya: string;
-
-			date: string;
-			tanggal: string;
-		}>;
-	};
-}
+type PrayerTime = z.infer<typeof prayerTimeResponseSchema>;
