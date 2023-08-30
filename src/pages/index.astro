@@ -123,20 +123,23 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 			return result;
 		}
 
-		const currentTime = new Intl.DateTimeFormat('id-ID', {
+		const formatTime = new Intl.DateTimeFormat('id-ID', {
 			hour: 'numeric',
 			minute: 'numeric',
 			timeZone,
-		}).format(new Date());
+		});
 
+		// `id-ID` is Indonesia locale, `u-ca-islamic` is Hijri calendar
 		const formatHijri = new Intl.DateTimeFormat('id-ID-u-ca-islamic', {
 			day: 'numeric',
 			month: 'long',
 			year: 'numeric',
 		});
 
+		// find next prayer
 		const nextPrayerName =
 			findNextPrayer(
+				// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time
 				{
 					subuh: prayerTime.subuh,
 					dzuhur: prayerTime.dzuhur,
@@ -144,17 +147,16 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 					maghrib: prayerTime.maghrib,
 					isya: prayerTime.isya,
 				},
-				currentTime,
-			) || 'subuh';
+				formatTime.format(new Date()),
+			) || 'subuh'; // set fallback to `subuh`, if there's no next prayer
 		const nextPrayerTime = prayerTime[nextPrayerName];
 
+		// apply to DOM
 		const $ = selector => document.querySelector(selector);
-
 		$('#prayer-name').textContent = nextPrayerName;
 		$('#prayer-time').textContent = nextPrayerTime;
 		$('#prayer-date').textContent = formatHijri.format(new Date(prayerTime.date));
 		$('#prayer-icon > use').setAttribute('href', `/sprite.svg#${nextPrayerName}`);
-
 		$(`#prayer-time-list > #prayer-time-${nextPrayerName}`).classList.add('bg-slate-100');
 		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > time`).classList.add('font-semibold');
 		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > div > span`).classList.add('font-semibold');
