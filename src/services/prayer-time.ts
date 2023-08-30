@@ -1,18 +1,14 @@
-import type { CfProperties } from "@cloudflare/workers-types";
 import { z } from "zod";
 import { LRUCache } from "lru-cache";
 import { cachified, lruCacheAdapter, type CacheEntry } from "cachified";
 
 const SERVICE_URL = "https://api.myquran.com/v1/sholat/jadwal";
 
-const fallbackTimezone = "Asia/Jakarta";
-const fallbackPrayer = "subuh";
-
 const lru = new LRUCache<string, CacheEntry>({ max: 50 });
 const cache = lruCacheAdapter(lru);
 const cacheTtlMs = 1_000 * 60 * 60 * 24 * 31; // 1 month
 
-const prayerTimeResponseSchema = z
+const schema = z
 	.object({
 		data: z.object({
 			jadwal: z.array(
@@ -27,87 +23,38 @@ const prayerTimeResponseSchema = z
 			),
 		}),
 	})
-	.transform((data) => data.data.jadwal);
+	.transform((v) => v.data.jadwal);
 
 /**
- * Get next prayer time for specific city
+ * Get prayer time in a month for specific city
  */
-export async function getNextPrayerTime(cityId: string, cf?: CfProperties) {
-	// TODO: improve type
-	const prayerTime = (await getPrayerTime(cityId)) as unknown as Record<
-		string,
-		string
-	>;
+export async function getPrayerTimeInMonth(cityId: string) {
+	const now = new Date();
+	const currentYearAndMonth = `${now.getFullYear()}/${now.getMonth() + 1}`;
 
-	// Get current hour based on user's timezone
-	const currentTime = new Intl.DateTimeFormat("id-ID", {
-		hour: "numeric",
-		minute: "numeric",
-		timeZone:
-			typeof cf?.timezone === "string" ? cf?.timezone : fallbackTimezone,
-	}).format(new Date());
-
-	// Find next prayer time
-	// TODO: it should wait at least 15 minute before switching to next prayer time
-	function finderNextPrayer(key: string) {
-		try {
-			const [currentHour, currentMinute] = currentTime.split(".");
-			const [hour, minute] = prayerTime[key].split(":");
-
-			if (parseInt(hour) > parseInt(currentHour)) {
-				return true;
-			}
-
-			if (parseInt(hour) === parseInt(currentHour)) {
-				return parseInt(minute) >= parseInt(currentMinute);
-			}
-
-			return false;
-		} catch {
-			return false;
-		}
-	}
-
-	// Get next prayer time
-	const findNextPrayer = Object.keys(prayerTime).find(finderNextPrayer);
-	// TODO: should fetch next day prayer time if no next prayer time found
-	const nextPrayerName = findNextPrayer ?? fallbackPrayer;
-
-	return {
-		name: nextPrayerName,
-		time: prayerTime[nextPrayerName],
-		isNextDay: !findNextPrayer,
-	};
+	return cachified<PrayerTimeInMonth>({
+		key: `ID_${cityId}-${currentYearAndMonth}`, // prefix with country code, so it can be scaled globally
+		cache,
+		ttl: cacheTtlMs,
+		checkValue: schema,
+		forceFresh: now.getDate() === 1, // force fresh value on first day of month
+		async getFreshValue() {
+			return fetch(`${SERVICE_URL}/${cityId}/${currentYearAndMonth}`).then(
+				(r) => r.json()
+			);
+		},
+	});
 }
 
 /**
  * Get prayer time in a day for specific city
  */
 export async function getPrayerTime(cityId: string) {
-	const prayerTimeInMonth = await getPrayerTimeInMoth(cityId);
+	const prayerTimeInMonth = await getPrayerTimeInMonth(cityId);
 
+	// subtract 1 because array index start from 0
 	return prayerTimeInMonth[new Date().getDate() - 1];
 }
 
-/**
- * Get prayer time in a month for specific city
- */
-export async function getPrayerTimeInMoth(cityId: string) {
-	const now = new Date();
-	const currentYearAndMonth = `${now.getFullYear()}/${now.getMonth() + 1}`;
-
-	return cachified<PrayerTime>({
-		key: `ID_${cityId}-${currentYearAndMonth}`,
-		cache,
-		ttl: cacheTtlMs,
-		async getFreshValue() {
-			const response = await fetch(
-				`${SERVICE_URL}/${cityId}/${currentYearAndMonth}`
-			).then((r) => r.json());
-
-			return prayerTimeResponseSchema.parse(response);
-		},
-	});
-}
-
-type PrayerTime = z.infer<typeof prayerTimeResponseSchema>;
+type PrayerTimeInMonth = z.infer<typeof schema>;
+export type PrayerTime = PrayerTimeInMonth[number];
