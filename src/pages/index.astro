@@ -31,11 +31,11 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 			</div>
 
 			<div class='w-full space-y-1'>
-				<h1 id='prayer-name' class='text-highlight text-xl capitalize'>---</h1>
+				<h1 id='prayer-name' class='text-highlight text-lg capitalize'>---</h1>
 
 				<div class='flex justify-between'>
-					<time id='prayer-time' class='font-semibold text-heading text-5xl'>--:--</time>
-					<!-- <small id='prayer-time-countdown'>--:--:--</small> -->
+					<time id='prayer-time' class='font-semibold text-heading text-4xl'>--:--</time>
+					<span id='prayer-time-countdown' class='font-light'>--:--:--</span>
 				</div>
 			</div>
 		</section>
@@ -81,7 +81,7 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 	</div>
 
 	<script slot='script' define:vars={{ prayerTime, timeZone: userTimeZone }}>
-		function findNextPrayer(prayerTime, currentTime) {
+		function getNextPrayer(prayerTime, currentTime) {
 			const result = Object.keys(prayerTime).find(value => {
 				const time = prayerTime[value];
 
@@ -138,28 +138,63 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 		});
 
 		// find next prayer
-		const nextPrayerName =
-			findNextPrayer(
-				// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time
-				{
-					subuh: prayerTime.subuh,
-					dzuhur: prayerTime.dzuhur,
-					ashar: prayerTime.ashar,
-					maghrib: prayerTime.maghrib,
-					isya: prayerTime.isya,
-				},
-				formatTime.format(new Date()),
-			) || 'subuh'; // set fallback to `subuh`, if there's no next prayer
+		const finderNextPrayer = getNextPrayer(
+			// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time
+			{
+				subuh: prayerTime.subuh,
+				dzuhur: prayerTime.dzuhur,
+				ashar: prayerTime.ashar,
+				maghrib: prayerTime.maghrib,
+				isya: prayerTime.isya,
+			},
+			formatTime.format(new Date()),
+		);
+		const nextPrayerName = finderNextPrayer || 'subuh'; // set fallback to `subuh`, if there's no next prayer
 		const nextPrayerTime = prayerTime[nextPrayerName];
 
 		// apply to DOM
 		const $ = selector => document.querySelector(selector);
 		$('#prayer-name').textContent = nextPrayerName;
 		$('#prayer-time').textContent = nextPrayerTime;
+		$('#prayer-time').setAttribute('datetime', nextPrayerTime);
 		$('#prayer-date').textContent = formatHijri.format(new Date(prayerTime.date));
+		$('#prayer-date').setAttribute('datetime', new Date(prayerTime.date).toISOString());
 		$('#prayer-icon > use').setAttribute('href', `/sprite.svg#${nextPrayerName}`);
 		$(`#prayer-time-list > #prayer-time-${nextPrayerName}`).classList.add('bg-slate-100');
 		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > time`).classList.add('font-semibold');
 		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > div > span`).classList.add('font-semibold');
+
+		const [nextPrayerHour, nextPrayerMinute] = nextPrayerTime.split(':');
+		const nextPrayerDate = new Date();
+		// set hours and minutes to next prayer time
+		nextPrayerDate.setHours(nextPrayerHour, nextPrayerMinute);
+		if (!finderNextPrayer) {
+			// if there's no next prayer, then set next prayer date to tomorrow
+			nextPrayerDate.setDate(nextPrayerDate.getDate() + 1);
+		}
+
+		// set countdown timer
+		const timer = setInterval(() => {
+			const now = new Date();
+			const diff = nextPrayerDate - now;
+
+			if (diff <= 0) {
+				// if diff is less than or equal to 0, then clear interval
+				clearInterval(timer);
+				return;
+			}
+
+			// calculate hours, minutes, and seconds
+			const hours = Math.floor(diff / 1000 / 60 / 60);
+			const minutes = Math.floor(diff / 1000 / 60) % 60;
+			const seconds = Math.floor(diff / 1000) % 60;
+
+			// add leading zero
+			const addLeadingZero = value => value.toString().padStart(2, '0');
+
+			// apply to DOM
+			$('#prayer-time-countdown').textContent = `${addLeadingZero(hours)}:${addLeadingZero(minutes)}:${addLeadingZero(seconds)}`;
+		}, 1000);
+		$('#prayer-time-countdown').setAttribute('datetime', nextPrayerDate.toISOString());
 	</script>
 </Html>
