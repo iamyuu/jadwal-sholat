@@ -1,41 +1,162 @@
 ---
 import { getCityByUser } from '../services/city';
-import { getNextPrayerTime } from '../services/prayer-time';
+import { getPrayerTime } from '../services/prayer-time';
 import Html from '../components/html.astro';
-import CountdownTimer from '../components/countdown-timer.svelte';
 
-// Get prayer time based on user's city (based on Cloudflare geolocation)
-// @ts-expect-error -- `cf` only available on Cloudflare, not on local dev
-const cf = Astro.locals.runtime?.cf;
-const userCity = getCityByUser(cf);
-const prayerTime = await getNextPrayerTime(userCity.id, cf);
+// Prevent pre-render at build time, because we want to get user's city first
+export const prerender = false;
 
 // TODO: set manually city
 // Cloudflare geolocation is not 100% accurate
 
-// transform city name to lowercase and remove `kota` word
-const displayCity = userCity?.lokasi.toLowerCase().replace('kota', '');
+// @ts-expect-error -- `cf` only available on Cloudflare, not on local dev
+const cf = Astro.locals.runtime?.cf;
+const userCity = getCityByUser(cf);
+const userTimeZone = typeof cf?.timeZone === 'string' ? cf?.timeZone : 'Asia/Jakarta';
 
-export const prerender = false;
+// Get prayer time based on user's city (based on Cloudflare geolocation)
+const prayerTime = await getPrayerTime(userCity.id);
+
+// transform city name to lowercase and remove `kota` word
+const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 ---
 
 <Html>
-	<section aria-label='card prayer time' class='bg-card flex flex-col justify-between mx-auto p-4 rounded-2xl shadow-sm w-72 h-72'>
-		<div class='flex justify-between items-center text-2xl'>
-			<span aria-label='sholat berikutnya' class='text-highlight text-2xl capitalize'>{prayerTime.name}</span>
-			<svg width='32' height='32' class='opacity-75'>
-				<use href={`/sprite.svg#${prayerTime.name}`}></use>
-			</svg>
-		</div>
-		<div class='flex flex-col font-light'>
-			<div class='flex items-center space-x-1'>
-				<svg width='16' height='16'>
-					<use href='/sprite.svg#tabler-map-pin'></use>
+	<div class='bg-card flex flex-col mx-auto rounded-2xl shadow-sm'>
+		<section class='flex items-center space-x-4 p-4 rounded-t-xl'>
+			<div class='bg-slate-50 p-2 rounded-xl'>
+				<svg id='prayer-icon' width='48' height='48'>
+					<use href='/sprite.svg#tabler-question-mark'></use>
 				</svg>
-				<small aria-label='lokasi saya' class='capitalize'>{displayCity}</small>
 			</div>
-			<time aria-label='waktu sholat berikutnya' datetime={prayerTime.time} class='font-semibold text-heading text-5xl'>{prayerTime.time}</time>
-			<CountdownTimer client:load prayerTime={prayerTime.time} isNextDay={prayerTime.isNextDay} />
-		</div>
-	</section>
+
+			<div class='w-full space-y-1'>
+				<h1 id='prayer-name' class='text-highlight text-xl capitalize'>---</h1>
+
+				<div class='flex justify-between'>
+					<time id='prayer-time' class='font-semibold text-heading text-5xl'>--:--</time>
+					<!-- <small id='prayer-time-countdown'>--:--:--</small> -->
+				</div>
+			</div>
+		</section>
+
+		<section class='bg-slate-50 py-4 space-y-4'>
+			<div class='flex justify-between items-center px-4'>
+				<div class='flex items-center space-x-2'>
+					<svg width='24' height='24'>
+						<use href='/sprite.svg#tabler-map-pin'></use>
+					</svg>
+					<span class='text-sm capitalize'>{displayCity}</span>
+				</div>
+
+				<div class='text-right text-sm'>
+					<time id='prayer-date' class='block'>--</time>
+				</div>
+			</div>
+
+			<ol id='prayer-time-list'>
+				{
+					Object.entries(prayerTime).map(([name, time]) => {
+						if (typeof time === 'object') {
+							// If current item is not prayer time (e.g. date), skip it
+							return null;
+						}
+
+						return (
+							// if active bg-slate-100
+							<li id={`prayer-time-${name}`} class='flex justify-between px-4 py-2'>
+								<div class='flex items-center space-x-2'>
+									<svg width='24' height='24'>
+										<use href={`/sprite.svg#${name}`} />
+									</svg>
+									<span class='capitalize'>{name}</span>
+								</div>
+								<time datetime={time}>{time}</time>
+							</li>
+						);
+					})
+				}
+			</ol>
+		</section>
+	</div>
+
+	<script slot='script' define:vars={{ prayerTime, timeZone: userTimeZone }}>
+		function findNextPrayer(prayerTime, currentTime) {
+			const result = Object.keys(prayerTime).find(value => {
+				const time = prayerTime[value];
+
+				// if time is not string (should be HH:mm), then it's not valid to compare, just return false
+				if (typeof time !== 'string') {
+					return false;
+				}
+
+				try {
+					// current time has format: 12.00, because we use Intl.DateTimeFormat
+					const [currentHour, currentMinute] = currentTime.split('.');
+					// prayer time has format: 12:00, it's external data
+					const [hour, minute] = time.split(':');
+
+					// compare hour first, if prayer time hour is greater than current hour, then it's next prayer
+					if (parseInt(hour) > parseInt(currentHour)) {
+						return true;
+					}
+
+					// if prayer time hour is equal to current hour, then compare minute
+					if (parseInt(hour) === parseInt(currentHour)) {
+						// if prayer time minute is greater than current minute, then it's next prayer
+						return parseInt(minute) >= parseInt(currentMinute);
+					}
+
+					// if prayer time hour is less than current hour, then it's not next prayer
+					return false;
+				} catch {
+					// if there's an error, just return false
+					return false;
+				}
+			});
+
+			// the result should be string, if not, then it's not valid
+			if (typeof result !== 'string') {
+				return;
+			}
+
+			return result;
+		}
+
+		const currentTime = new Intl.DateTimeFormat('id-ID', {
+			hour: 'numeric',
+			minute: 'numeric',
+			timeZone,
+		}).format(new Date());
+
+		const formatHijri = new Intl.DateTimeFormat('id-ID-u-ca-islamic', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric',
+		});
+
+		const nextPrayerName =
+			findNextPrayer(
+				{
+					subuh: prayerTime.subuh,
+					dzuhur: prayerTime.dzuhur,
+					ashar: prayerTime.ashar,
+					maghrib: prayerTime.maghrib,
+					isya: prayerTime.isya,
+				},
+				currentTime,
+			) || 'subuh';
+		const nextPrayerTime = prayerTime[nextPrayerName];
+
+		const $ = selector => document.querySelector(selector);
+
+		$('#prayer-name').textContent = nextPrayerName;
+		$('#prayer-time').textContent = nextPrayerTime;
+		$('#prayer-date').textContent = formatHijri.format(new Date(prayerTime.date));
+		$('#prayer-icon > use').setAttribute('href', `/sprite.svg#${nextPrayerName}`);
+
+		$(`#prayer-time-list > #prayer-time-${nextPrayerName}`).classList.add('bg-slate-100');
+		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > time`).classList.add('font-semibold');
+		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > div > span`).classList.add('font-semibold');
+	</script>
 </Html>
