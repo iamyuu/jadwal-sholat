@@ -80,6 +80,18 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 		</section>
 	</div>
 
+	<section class='text-sm font-light px-4 py-2 space-x-1'>
+		<a href='https://www.google.com/maps/search/masjid+terdekat+lokasi+saya' target='_blank' rel='noopener noreferrer' class='underline'>Cari masjid terdekat</a>
+		<!-- <span class='font-semibold'>&middot;</span>
+		<a href='/bulanan' class='underline'>Jadwal bulanan</a> -->
+		<!-- <span class='font-semibold'>&middot;</span>
+		<a href='/surat-pendek' class='underline'>Tata cara sholat</a> -->
+		<!-- <span class='font-semibold'>&middot;</span>
+		<a href='/surat-pendek' class='underline'>Doa dan dzikir</a> -->
+		<!-- <span class='font-semibold'>&middot;</span>
+		<a href='/surat-pendek' class='underline'>Surat pendek</a> -->
+	</section>
+
 	<script slot='script' define:vars={{ prayerTime, timeZone: userTimeZone }}>
 		function getNextPrayer(prayerTime, currentTime) {
 			const result = Object.keys(prayerTime).find(value => {
