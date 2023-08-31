@@ -2,7 +2,6 @@ import { defineConfig } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
-import svelte from "@astrojs/svelte";
 import pwa from "@vite-pwa/astro";
 import { manifest } from "./src/constants";
 
@@ -12,7 +11,6 @@ export default defineConfig({
 	site: "https://jadwalsholat.my.id",
 	integrations: [
 		tailwind(),
-		svelte(),
 		sitemap(),
 		pwa({
 			mode: "production",
