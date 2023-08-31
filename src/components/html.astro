@@ -9,7 +9,7 @@ Object.assign(seo, {
 });
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang={seo.locale}>
 	<head>
 		<meta charset='utf-8' />
@@ -21,7 +21,7 @@ Object.assign(seo, {
 		{pwaInfo ? <Fragment set:html={pwaInfo.webManifest.linkTag} /> : null}
 		<link rel='shortcut icon' type='image/x-icon' href='/icons/favicon.ico' sizes='any' />
 		<link rel='apple-touch-icon' href='/icons/apple-touch-icon.png' />
-		<link rel='preload' as='image' type='image/svg+xml' href='/sprite.svg' />
+		<link rel='image' type='image/svg+xml' href='/sprite.svg' />
 
 		<title>{seo.title}</title>
 		<link rel='canonical' href={seo.url} />
