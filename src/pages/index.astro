@@ -2,6 +2,8 @@
 import { getCityByUser } from '../services/city';
 import { getPrayerTime } from '../services/prayer-time';
 import Html from '../components/html.astro';
+import { CurrentAndNextPrayer } from '../components/current-and-next-prayer';
+import FormattedPrayerDate from '../components/formatted-prayer-date.astro';
 
 // Prevent pre-render at build time, because we want to get user's city first
 export const prerender = false;
@@ -23,22 +25,17 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 
 <Html>
 	<div class='bg-card flex flex-col mx-auto rounded-xl shadow-sm'>
-		<section class='flex items-center space-x-4 p-4 rounded-t-xl'>
-			<div class='bg-slate-50 p-2 rounded-xl'>
-				<svg id='prayer-icon' width='48' height='48'>
-					<use href='/sprite.svg#tabler-question-mark'></use>
-				</svg>
-			</div>
-
-			<div class='w-full space-y-1'>
-				<h1 id='prayer-name' class='text-highlight text-lg capitalize'>---</h1>
-
-				<div class='flex justify-between'>
-					<time id='prayer-time' class='font-semibold text-heading text-4xl'>--:--</time>
-					<span id='prayer-time-countdown' class='font-light'>--:--:--</span>
-				</div>
-			</div>
-		</section>
+		<CurrentAndNextPrayer
+			timeZone={userTimeZone}
+			prayerTime={{
+				// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time
+				subuh: prayerTime.subuh,
+				dzuhur: prayerTime.dzuhur,
+				ashar: prayerTime.ashar,
+				maghrib: prayerTime.maghrib,
+				isya: prayerTime.isya,
+			}}
+		/>
 
 		<section class='bg-slate-50 py-4 space-y-4 rounded-xl'>
 			<div class='flex justify-between items-center px-4'>
@@ -49,9 +46,7 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 					<span class='text-sm capitalize'>{displayCity}</span>
 				</div>
 
-				<div class='text-right text-sm'>
-					<time id='prayer-date' class='block'>--</time>
-				</div>
+				<FormattedPrayerDate prayerDate={prayerTime.date} timeZone={userTimeZone} />
 			</div>
 
 			<ol id='prayer-time-list'>
@@ -91,122 +86,4 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 		<!-- <span class='font-semibold'>&middot;</span>
 		<a href='/surat-pendek' class='underline'>Surat pendek</a> -->
 	</section>
-
-	<script slot='script' define:vars={{ prayerTime, timeZone: userTimeZone }}>
-		function getNextPrayer(prayerTime, currentTime) {
-			const result = Object.keys(prayerTime).find(value => {
-				const time = prayerTime[value];
-
-				// if time is not string (should be HH:mm), then it's not valid to compare, just return false
-				if (typeof time !== 'string') {
-					return false;
-				}
-
-				try {
-					// current time has format: 12.00, because we use Intl.DateTimeFormat
-					const [currentHour, currentMinute] = currentTime.split('.');
-					// prayer time has format: 12:00, it's external data
-					const [hour, minute] = time.split(':');
-
-					// compare hour first, if prayer time hour is greater than current hour, then it's next prayer
-					if (parseInt(hour) > parseInt(currentHour)) {
-						return true;
-					}
-
-					// if prayer time hour is equal to current hour, then compare minute
-					if (parseInt(hour) === parseInt(currentHour)) {
-						// if prayer time minute is greater than current minute, then it's next prayer
-						return parseInt(minute) >= parseInt(currentMinute);
-					}
-
-					// if prayer time hour is less than current hour, then it's not next prayer
-					return false;
-				} catch {
-					// if there's an error, just return false
-					return false;
-				}
-			});
-
-			// the result should be string, if not, then it's not valid
-			if (typeof result !== 'string') {
-				return;
-			}
-
-			return result;
-		}
-
-		const formatTime = new Intl.DateTimeFormat('id-ID', {
-			hour: 'numeric',
-			minute: 'numeric',
-			timeZone,
-		});
-
-		// `id-ID` is Indonesia locale, `u-ca-islamic` is Hijri calendar
-		const formatHijri = new Intl.DateTimeFormat('id-ID-u-ca-islamic', {
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric',
-			timeZone,
-		});
-
-		// find next prayer
-		const finderNextPrayer = getNextPrayer(
-			// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time
-			{
-				subuh: prayerTime.subuh,
-				dzuhur: prayerTime.dzuhur,
-				ashar: prayerTime.ashar,
-				maghrib: prayerTime.maghrib,
-				isya: prayerTime.isya,
-			},
-			formatTime.format(new Date()),
-		);
-		const nextPrayerName = finderNextPrayer || 'subuh'; // set fallback to `subuh`, if there's no next prayer
-		const nextPrayerTime = prayerTime[nextPrayerName];
-
-		// apply to DOM
-		const $ = selector => document.querySelector(selector);
-		$('#prayer-name').textContent = nextPrayerName;
-		$('#prayer-time').textContent = nextPrayerTime;
-		$('#prayer-time').setAttribute('datetime', nextPrayerTime);
-		$('#prayer-date').textContent = formatHijri.format(new Date(prayerTime.date));
-		$('#prayer-date').setAttribute('datetime', new Date(prayerTime.date).toISOString());
-		$('#prayer-icon > use').setAttribute('href', `/sprite.svg#${nextPrayerName}`);
-		$(`#prayer-time-list > #prayer-time-${nextPrayerName}`).classList.add('bg-slate-100');
-		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > time`).classList.add('font-semibold');
-		$(`#prayer-time-list > #prayer-time-${nextPrayerName} > div > span`).classList.add('font-semibold');
-
-		const [nextPrayerHour, nextPrayerMinute] = nextPrayerTime.split(':');
-		const nextPrayerDate = new Date();
-		// set hours and minutes to next prayer time
-		nextPrayerDate.setHours(nextPrayerHour, nextPrayerMinute);
-		if (!finderNextPrayer) {
-			// if there's no next prayer, then set next prayer date to tomorrow
-			nextPrayerDate.setDate(nextPrayerDate.getDate() + 1);
-		}
-
-		// set countdown timer
-		const timer = setInterval(() => {
-			const now = new Date();
-			const diff = nextPrayerDate - now;
-
-			if (diff <= 0) {
-				// if diff is less than or equal to 0, then clear interval
-				clearInterval(timer);
-				return;
-			}
-
-			// calculate hours, minutes, and seconds
-			const hours = Math.floor(diff / 1000 / 60 / 60);
-			const minutes = Math.floor(diff / 1000 / 60) % 60;
-			const seconds = Math.floor(diff / 1000) % 60;
-
-			// add leading zero
-			const addLeadingZero = value => value.toString().padStart(2, '0');
-
-			// apply to DOM
-			$('#prayer-time-countdown').textContent = `${addLeadingZero(hours)}:${addLeadingZero(minutes)}:${addLeadingZero(seconds)}`;
-		}, 1000);
-		$('#prayer-time-countdown').setAttribute('datetime', nextPrayerDate.toISOString());
-	</script>
 </Html>

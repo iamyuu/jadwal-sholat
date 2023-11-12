@@ -1,0 +1,24 @@
+---
+interface Props {
+	timeZone: string;
+	prayerDate: Date;
+	format?: 'islamic' | 'gregorian';
+}
+
+// `id-ID` is Indonesia locale, `u-ca-islamic` is Hijri calendar
+const locale = Astro.props.format === 'islamic' ? 'id-ID-u-ca-islamic' : 'id-ID';
+const formatterDate = new Intl.DateTimeFormat(locale, {
+	day: 'numeric',
+	month: 'long',
+	year: 'numeric',
+	timeZone: Astro.props.timeZone,
+});
+
+const prayerDate = Astro.props.prayerDate;
+---
+
+<div class='text-right text-sm font-light'>
+	<time class='block' datetime={prayerDate.toISOString()}>
+		{formatterDate.format(prayerDate)}
+	</time>
+</div>

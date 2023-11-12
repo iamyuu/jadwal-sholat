@@ -45,9 +45,14 @@ Object.assign(seo, {
 		<meta name='twitter:description' content={seo.description} />
 	</head>
 	<body class='bg-background text-paragpraph font-sans'>
-		<main class='container mx-auto py-36 px-4 max-w-xl'>
+		<main class='container mx-auto pt-24 px-4 max-w-xl'>
 			<slot />
 		</main>
+		<footer class='text-center'>
+			<small>
+				Punya saran? Masukkan <a href='https://github.com/iamyuu/jadwalsholat/issues/new' target='_blank' rel='noopener noreferrer' class='underline'>di sini</a>
+			</small>
+		</footer>
 		<slot name='script' />
 	</body>
 </html>

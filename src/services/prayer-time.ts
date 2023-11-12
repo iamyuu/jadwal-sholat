@@ -56,5 +56,73 @@ export async function getPrayerTime(cityId: string) {
 	return prayerTimeInMonth[new Date().getDate() - 1];
 }
 
+/**
+ * Get current and next prayer time, based on current time
+ */
+export function getCurrentAndNextPrayerTime(
+	prayerTime: PrayerTime,
+	timeZone?: string
+) {
+	const prayerTimeKeys = Object.keys(prayerTime) as Array<keyof PrayerTime>;
+	const currentTime = new Intl.DateTimeFormat("id-ID", {
+		hour: "numeric",
+		minute: "numeric",
+		timeZone,
+	}).format(new Date());
+
+	// set default to last prayer time
+	let currentPrayerTime: keyof PrayerTime = "isya";
+
+	// find current prayer time
+	for (const prayerName of prayerTimeKeys) {
+		const time = prayerTime[prayerName];
+
+		// if time is not string (should be HH:mm), then it's not valid to compare, just continue
+		if (typeof time !== "string") {
+			continue;
+		}
+
+		try {
+			// current time has format: 12.00, because we use Intl.DateTimeFormat
+			const [currentHour, currentMinute] = currentTime.split(".");
+			// prayer time has format: 12:00, it's external data
+			const [hour, minute] = time.split(":");
+
+			// if current time is less than prayer time, then it's current prayer time
+			if (
+				Number(currentHour) < Number(hour) ||
+				(Number(currentHour) === Number(hour) &&
+					Number(currentMinute) < Number(minute))
+			) {
+				currentPrayerTime = prayerName;
+				break;
+			}
+
+			// if current time is greater than prayer time, then it's not current prayer time
+			if (
+				Number(currentHour) > Number(hour) ||
+				(Number(currentHour) === Number(hour) &&
+					Number(currentMinute) > Number(minute))
+			) {
+				continue;
+			}
+
+			// if current time is equal to prayer time, then it's current prayer time
+			currentPrayerTime = prayerName;
+			break;
+		} catch {
+			// if there's an error, just continue
+			continue;
+		}
+	}
+
+	const nextPrayerTimeIndex = prayerTimeKeys.indexOf(currentPrayerTime) + 1;
+
+	return {
+		currentPrayerTime,
+		nextPrayerTime: prayerTimeKeys[nextPrayerTimeIndex],
+	};
+}
+
 type PrayerTimeInMonth = z.infer<typeof schema>;
-export type PrayerTime = PrayerTimeInMonth[number];
+export type PrayerTime = Omit<PrayerTimeInMonth[number], "date">;

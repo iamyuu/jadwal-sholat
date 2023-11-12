@@ -2,7 +2,9 @@
 	"extends": "astro/tsconfigs/strict",
 	"compilerOptions": {
 		"lib": ["ESNext", "DOM", "WebWorker"],
-		"allowJs": true
+		"allowJs": true,
+		"jsx": "react-jsx",
+		"jsxImportSource": "@builder.io/qwik"
 	},
 	"exclude": ["node_modules", "dist", "public"]
 }
