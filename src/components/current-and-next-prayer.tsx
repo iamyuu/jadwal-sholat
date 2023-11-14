@@ -11,8 +11,7 @@ type CurrentAndNextPrayerProps = {
 };
 
 export const CurrentAndNextPrayer = component$<CurrentAndNextPrayerProps>(
-	// @ts-expect-error
-	({ props }) => {
+	(props) => {
 		const currentPrayerTime = useSignal({
 			name: "--",
 			time: "--:--",
