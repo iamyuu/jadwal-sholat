@@ -59,62 +59,27 @@ export async function getPrayerTime(cityId: string) {
 /**
  * Get current and next prayer time, based on current time
  */
-export function getCurrentAndNextPrayerTime(
-	prayerTime: PrayerTime,
-	timeZone?: string
-) {
+export function getCurrentAndNextPrayerTime(prayerTime: PrayerTime) {
 	const prayerTimeKeys = Object.keys(prayerTime) as Array<keyof PrayerTime>;
-	const currentTime = new Intl.DateTimeFormat("id-ID", {
-		hour: "numeric",
-		minute: "numeric",
-		timeZone,
-	}).format(new Date());
+	const today = new Date();
 
-	// set default to last prayer time
-	let currentPrayerTime: keyof PrayerTime = "isya";
+	// find current prayer time and if not found, set to last prayer time
+	const currentPrayerTime =
+		prayerTimeKeys
+			.filter((key) => {
+				const [prayerHour, prayerMinute] = prayerTime[key].split(":");
+				const prayerTimeByKey = new Date(
+					today.getFullYear(),
+					today.getMonth(),
+					today.getDate(),
+					parseInt(prayerHour),
+					parseInt(prayerMinute),
+					0
+				);
 
-	// find current prayer time
-	for (const prayerName of prayerTimeKeys) {
-		const time = prayerTime[prayerName];
-
-		// if time is not string (should be HH:mm), then it's not valid to compare, just continue
-		if (typeof time !== "string") {
-			continue;
-		}
-
-		try {
-			// current time has format: 12.00, because we use Intl.DateTimeFormat
-			const [currentHour, currentMinute] = currentTime.split(".");
-			// prayer time has format: 12:00, it's external data
-			const [hour, minute] = time.split(":");
-
-			// if current time is less than prayer time, then it's current prayer time
-			if (
-				Number(currentHour) < Number(hour) ||
-				(Number(currentHour) === Number(hour) &&
-					Number(currentMinute) < Number(minute))
-			) {
-				currentPrayerTime = prayerName;
-				break;
-			}
-
-			// if current time is greater than prayer time, then it's not current prayer time
-			if (
-				Number(currentHour) > Number(hour) ||
-				(Number(currentHour) === Number(hour) &&
-					Number(currentMinute) > Number(minute))
-			) {
-				continue;
-			}
-
-			// if current time is equal to prayer time, then it's current prayer time
-			currentPrayerTime = prayerName;
-			break;
-		} catch {
-			// if there's an error, just continue
-			continue;
-		}
-	}
+				return prayerTimeByKey.getTime() <= today.getTime();
+			})
+			.pop() ?? prayerTimeKeys[prayerTimeKeys.length - 1];
 
 	const nextPrayerTimeIndex = prayerTimeKeys.indexOf(currentPrayerTime) + 1;
 

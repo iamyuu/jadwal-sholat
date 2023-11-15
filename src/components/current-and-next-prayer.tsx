@@ -25,10 +25,7 @@ export const CurrentAndNextPrayer = component$<CurrentAndNextPrayerProps>(
 
 		useVisibleTask$(({ cleanup }) => {
 			// find prayer time
-			const finderPrayerTime = getCurrentAndNextPrayerTime(
-				props.prayerTime,
-				props.timeZone
-			);
+			const finderPrayerTime = getCurrentAndNextPrayerTime(props.prayerTime);
 
 			const currentPrayerName = finderPrayerTime?.currentPrayerTime || "subuh";
 			currentPrayerTime.value = {
@@ -48,7 +45,10 @@ export const CurrentAndNextPrayer = component$<CurrentAndNextPrayerProps>(
 			const nextPrayerDate = new Date();
 
 			// set hours and minutes to next prayer time
-			nextPrayerDate.setHours(nextPrayerHour, nextPrayerMinute);
+			nextPrayerDate.setHours(
+				parseInt(nextPrayerHour),
+				parseInt(nextPrayerMinute)
+			);
 
 			if (!finderPrayerTime.nextPrayerTime) {
 				// if there's no next prayer, then set next prayer date to tomorrow
