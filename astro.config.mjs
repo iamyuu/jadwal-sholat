@@ -4,7 +4,7 @@ import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
 import pwa from "@vite-pwa/astro";
 import { manifest } from "./src/constants";
-import qwikdev from "@qwikdev/astro";
+import vue from "@astrojs/vue";
 
 // https://astro.build/config
 export default defineConfig({
@@ -31,7 +31,7 @@ export default defineConfig({
 				navigateFallbackAllowlist: [/^\/404$/],
 			},
 		}),
-		qwikdev(),
+		vue(),
 	],
 	adapter: cloudflare(),
 });

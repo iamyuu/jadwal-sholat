@@ -2,7 +2,7 @@
 import { getCityByUser } from '../services/city';
 import { getPrayerTime } from '../services/prayer-time';
 import Html from '../components/html.astro';
-import { CurrentAndNextPrayer } from '../components/current-and-next-prayer';
+import CurrentAndNextPrayer from '../components/current-and-next-prayer.vue';
 import FormattedPrayerDate from '../components/formatted-prayer-date.astro';
 
 // Prevent pre-render at build time, because we want to get user's city first
@@ -26,6 +26,7 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 <Html>
 	<div class='bg-card flex flex-col mx-auto rounded-xl shadow-sm'>
 		<CurrentAndNextPrayer
+			client:load
 			timeZone={userTimeZone}
 			prayerTime={{
 				// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time

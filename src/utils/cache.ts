@@ -1,4 +1,4 @@
-import { Cache, CacheEntry, totalTtl } from "@epic-web/cachified";
+import { type Cache, type CacheEntry, totalTtl } from "@epic-web/cachified";
 import { LRUCache } from "lru-cache";
 
 const lruInstance = new LRUCache<string, CacheEntry>({ max: 50 });
