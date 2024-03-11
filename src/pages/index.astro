@@ -24,21 +24,23 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 ---
 
 <Html>
-	<div class='bg-card flex flex-col mx-auto rounded-xl shadow-sm'>
-		<CurrentAndNextPrayer
-			client:load
-			timeZone={userTimeZone}
-			prayerTime={{
-				// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time
-				subuh: prayerTime.subuh,
-				dzuhur: prayerTime.dzuhur,
-				ashar: prayerTime.ashar,
-				maghrib: prayerTime.maghrib,
-				isya: prayerTime.isya,
-			}}
-		/>
+	<article class='bg-card flex flex-col mx-auto rounded-xl shadow-sm'>
+		<header class='min-h-[104px] p-4 rounded-t-xl'>
+			<CurrentAndNextPrayer
+				client:load
+				timeZone={userTimeZone}
+				prayerTime={{
+					// only add prayer time, ignore other data (e.g. `date`), because it's not prayer time
+					subuh: prayerTime.subuh,
+					dzuhur: prayerTime.dzuhur,
+					ashar: prayerTime.ashar,
+					maghrib: prayerTime.maghrib,
+					isya: prayerTime.isya,
+				}}
+			/>
+		</header>
 
-		<section class='bg-slate-50 py-4 space-y-4 rounded-xl'>
+		<main class='bg-slate-50 py-4 space-y-4 rounded-xl'>
 			<div class='flex justify-between items-center px-4'>
 				<div class='flex items-center space-x-2'>
 					<svg width='24' height='24'>
@@ -50,7 +52,7 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 				<FormattedPrayerDate prayerDate={prayerTime.date} timeZone={userTimeZone} />
 			</div>
 
-			<ol id='prayer-time-list'>
+			<ol id='prayer-time-list' aria-label='daftar jadwal sholat'>
 				{
 					Object.entries(prayerTime).map(([name, time]) => {
 						if (typeof time === 'object') {
@@ -59,8 +61,7 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 						}
 
 						return (
-							// if active bg-slate-100
-							<li id={`prayer-time-${name}`} class='flex justify-between px-4 py-2'>
+							<li id={`prayer-time-${name}`} class='flex justify-between px-4 py-2' aria-label={name}>
 								<div class='flex items-center space-x-2'>
 									<svg width='24' height='24'>
 										<use href={`/sprite.svg#${name}`} />
@@ -73,18 +74,16 @@ const displayCity = userCity.lokasi.toLowerCase().replace('kota', '');
 					})
 				}
 			</ol>
-		</section>
-	</div>
+		</main>
+	</article>
 
-	<section class='text-sm font-light px-4 py-2 space-x-1'>
+	<nav class='text-sm font-light px-4 py-2 space-x-1'>
 		<a href='https://www.google.com/maps/search/masjid+terdekat+lokasi+saya' target='_blank' rel='noopener noreferrer' class='underline'>Cari masjid terdekat</a>
 		<!-- <span class='font-semibold'>&middot;</span>
-		<a href='/bulanan' class='underline'>Jadwal bulanan</a> -->
-		<!-- <span class='font-semibold'>&middot;</span>
-		<a href='/surat-pendek' class='underline'>Tata cara sholat</a> -->
-		<!-- <span class='font-semibold'>&middot;</span>
-		<a href='/surat-pendek' class='underline'>Doa dan dzikir</a> -->
+		<a href='/surat-pendek' class='underline'>Doa harian</a> -->
 		<!-- <span class='font-semibold'>&middot;</span>
 		<a href='/surat-pendek' class='underline'>Surat pendek</a> -->
-	</section>
+		<!-- <span class='font-semibold'>&middot;</span>
+		<a href='/surat-pendek' class='underline'>Menu lainnya</a> -->
+	</nav>
 </Html>

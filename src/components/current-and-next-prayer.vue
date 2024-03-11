@@ -33,6 +33,11 @@ if (!nextPrayerName) {
 	nextPrayerDate.setDate(nextPrayerDate.getDate() + 1);
 }
 
+// set active state to the list of prayer time
+if (typeof document !== 'undefined') {
+	document.querySelector(`#prayer-time-${currentPrayerName}`)?.setAttribute("aria-current", "true");
+}
+
 // start timer
 let timer = setInterval(() => {
 	// find difference between next prayer date and now
@@ -58,7 +63,7 @@ let timer = setInterval(() => {
 </script>
 
 <template>
-	<section class="flex items-center space-x-4 p-4 rounded-t-xl">
+	<div class="flex items-center space-x-4">
 		<div class="bg-slate-50 p-2 rounded-xl">
 			<svg width="48" height="48">
 				<use :href="currentPrayerIcon"></use>
@@ -87,5 +92,5 @@ let timer = setInterval(() => {
 				</div>
 			</div>
 		</div>
-	</section>
+	</div>
 </template>

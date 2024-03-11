@@ -21,3 +21,7 @@ main {
 footer {
 	grid-area: footer;
 }
+
+#prayer-time-list [aria-current="true"] {
+	@apply bg-slate-100;
+}
